@@ -1,5 +1,5 @@
 blueprint:
-  name: Turn on light, switch, scene, script or group based on motion and illuminance.
+  name: Automatizacion de Luces Custom Diego
   description: >
     Turn on a light, switch, scene, script or group based on motion detection, and low light level.
 
@@ -16,7 +16,7 @@ blueprint:
     Optional features:
 
     - You can set a cutoff entity of which the value determines whether the illuminance level is low and the automation needs to trigger.
-    - You can define a blocking entity, which blocks the automation from running when this entity's state is on.
+    - You can define an Auto Mode entity, which enables the automation when this entity's state is on.
     - You van define a turn-off blocking entity, which blocks the entity from turning off after the set delay.
     - Time limits can also be defined to limit the time before and after the automation should trigger.
     - If you want the entity to turn off after a certain amount of minutes, you can use the Wait Time input.
@@ -31,7 +31,7 @@ blueprint:
 
     - Illuminance cutoff value  (input_number)
     
-    - Blocking entity (any entity with state on/off)
+    - Auto Mode entity (any entity with state on/off)
 
     - Time limit before (input_datetime)
 
@@ -68,9 +68,9 @@ blueprint:
       selector:
         entity:
           domain: input_number
-    blocker_entity:
-      name: (OPTIONAL) Blocking entity
-      description: If this entity's state is on, it will prevent the automation from running. E.g. sleepmode or away mode.
+    automode_entity:
+      name: (OPTIONAL) Auto Mode entity
+      description: If this entity's state is on, it will enable the automation. If none provided it enables too.
       default:
       selector:
         entity:
@@ -115,7 +115,7 @@ variables:
   target_entity: !input target_entity
   illuminance_currently: !input illuminance_sensor
   illuminance_cutoff: !input illuminance_cutoff
-  blocker_entity: !input blocker_entity
+  automode_entity: !input automode_entity
   time_limit_before: !input time_limit_before
   time_limit_after: !input time_limit_after
   no_motion_wait: !input no_motion_wait
@@ -133,7 +133,7 @@ condition:
   - condition: template
     value_template: "{{ (states[target_entity].state == 'on') or (illuminance_currently == none) or (illuminance_cutoff == none) or (states[illuminance_currently].state | int(0) < states[illuminance_cutoff].state | int(0)) }}"
   - condition: template
-    value_template: "{{ (blocker_entity == none) or (states[blocker_entity].state == 'off') }}"
+    value_template: "{{ (automode_entity == none) or (states[automode_entity].state == 'on') }}"
   - condition: template
     value_template: >
       {% set current_time = now().strftime("%H:%M")  %}
