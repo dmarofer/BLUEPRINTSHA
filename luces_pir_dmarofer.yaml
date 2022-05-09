@@ -1,40 +1,11 @@
 blueprint:
-  name: IKEA E1524/E1810 TRADFRI remote control + PIR
-  description: ' 
-  
-  Plantilla para automatizacion de las luces de una estancia con el mando de 5 botones de ikea y un sensor PIR
-
-  Que hace:
-
-  - Boton central Activa escena Normal o apaga las luces si estan encendidas
-  - Boton arriba y abajo toque simple activa las otras 2 escenas a elegir
-  - Boton arriba hold activa o desactiva la Automatizacion con PIR que esta a su vez hace:
-      - Activa la escena "normal" si las luces estan apagadas y la iluminacion esta por debajo del umbral
-      - Pasado el "tiempo atenuacion" sin movimiento PIR, activa la escena Minimo
-      - Pasado de "tiempo de apagado" sin movimiento PIR, apaga las luces
-  
-  - El resto de acciones de los botones podemos configurar otras acciones
-  
-  Que se necesita:
-
-  - Las escenas (3 normalmente) que queremos controlar con la automatizacion
-  - Un grupo con todas las luces de la estancia ( usado para apagarlas )
-  - Un sensor PIR o un grupo de sensores PIR para detecccion del movimiento
-  - Un sensor de luminancia de la estancia
-  - Un ayudante input_boolean que sera el estado on/off del encendido automatico 
-
-  '
-
+  name: Automatizacion Luces por Presencia
+  description: Automatizaciones de las luces por presencia
   domain: automation
+  source_url: https://github.com/dmarofer/BLUEPRINTSHA/blob/main/luces_pir_dmarofer.yaml
   input:
-    mando:
-      name: Mando Ikea
-      description: Mando para la automatizacion (action)
-      selector:
-        entity:
-          domain: sensor
-    luces:
-      name: Grupo de todas las luces de la estancia
+    grupo_luces:
+      name: Grupo de luces de la estancia
       description: Las luces o grupos a controlar (para apagar)
       selector:
         target:
@@ -42,172 +13,123 @@ blueprint:
             domain: light
     sensorpir:
       name: Sensor PIR
-      description: Sensor de movimiento
+      description: Sensor de movimiento o grupo de sensores
       selector:
         entity:
-          domain: sensor
+          domain: binary_sensor
+          device_class: motion
     sensorlux:
       name: Sensor LUX
-      description: Sensor de luminancia
+      description: Sensor de luminancia o grupo de sensores
       selector:
         entity:
           domain: sensor
+          device_class: illuminance
     escena_normal:
-    name: Escena Normal
-      description: La Escena a activar con el boton de central
-      selector:
-        target:
-          entity:
-            domain: scene
-    escena_max:
-    name: Escena Maximo
-      description: La Escena a activar con el boton de arriba
+      name: Escena Normal
+      description: La Escena a activar al encender
       selector:
         target:
           entity:
             domain: scene
     escena_min:
-    name: Escena Minimo
-      description: La Escena a activar con el boton de abajo
+      name: Escena Minimo
+      description: La Escena a activar antes de apagar
       selector:
         target:
           entity:
             domain: scene
-    ayudante_automatizacion:
-      name: Ayudante input_boolean automatizacion PIR
-      description: Ayudante input_boolean para encender o apagar la automatizacion por PIR con el arriba_hold
+    ayudante_auto:
+      name: Ayudante input_boolean para modo luces Auto o Manual
+      description: Ayudante input_boolean que activa o desactiva el encendido y apagado automatico
       selector:
         target:
           entity:
             domain: input_boolean
     tiempo_atenuacion:
       name: Tiempo Atenuacion
-        description: Tiempo para activar la escena Min en ausencia de movimiento
-        default: 120
-        selector:
-          number:
-            min: 10
-            max: 300
-            unit_of_measurement: seconds
+      description: Tiempo para activar la escena Min en ausencia de movimiento
+      default: 120
+      selector:
+        number:
+          min: 10
+          max: 300
+          unit_of_measurement: seconds
     tiempo_apagado:
       name: Tiempo Apagado
-        description: Tiempo para apagar las luces en ausencia de movimiento
-        default: 600
-        selector:
-          number:
-            min: 60
-            max: 1500
-            unit_of_measurement: seconds
+      description: Tiempo para apagar las luces en ausencia de movimiento
+      default: 600
+      selector:
+        number:
+          min: 60
+          max: 1500
+          unit_of_measurement: seconds
     iluminacion_minima:
       name: Iluminacion Minima
-        description: Iluminacion minima para el encendido automatico por PIR
-        default: 60
-        selector:
-          number:
-            min: 1
-            max: 200
-            unit_of_measurement: lux
-    boton_izquierda:
-      name: Toque Normal boton Izquierda
-      description: Accion para el Toque Normal boton Izquierda
-      default: []
+      description: Iluminacion minima para el encendido automatico por PIR
+      default: 60
       selector:
-        action: {}
-    boton_derecha:
-      name: Toque Normal boton Derecha
-      description: Accion para el Toque Normal boton Derecha
-      default: []
-      selector:
-        action: {}
-    boton_izquierda_hold:
-      name: Toque Largo boton Izquierda
-      description: Accion para el Toque Largo boton Izquierda
-      default: []
-      selector:
-        action: {}
-    boton_derecha_hold:
-      name: Toque Largo boton Derecha
-      description: Accion para el Toque Largo boton Derecha
-      default: []
-      selector:
-        action: {}
-    boton_abajo_hold:
-      name: Toque Largo boton Abajo
-      description: Accion para el Toque Largo boton Abajo
-      default: []
-      selector:
-        action: {}
-
-  source_url: https://community.home-assistant.io
-
+        number:
+          min: 1
+          max: 200
+          unit_of_measurement: lux
+    
 mode: restart
 max_exceeded: silent
 
 trigger:
-- platform: state
-  entity_id: !input 'mando'
-- platform: state
-  entity_id: !input 'sensorpir'
+  - platform: state
+    entity_id: !input 'sensorpir'
+    to: 'on'
+
+  - platform: state
+    entity_id: !input 'sensorpir'
+    to: 'off'
+    for: !input tiempo_atenuacion
+
+  - platform: state
+    entity_id: !input 'sensorpir'
+    to: 'off'
+    for: !input tiempo_apagado
 
 action:
-- variables:
-    mando: !input mando
-    comando: '{{ mando.to_state.state }}'
-    
-- choose:
-  
-  - conditions:
-    - '{{ comando == ''toggle'' }}'
-
-    sequence:
-      - choose:
-        - conditions:
+  - choose:
+      - conditions:
           - condition: state
-            entity_id: !input luces
+            entity_id: !input grupo_luces
             state: 'off'
-          sequence:
-          - service: scene.turn_on
-            entity_id: !input escena_normal          
-
-        default:
+          - condition: state
+            entity_id: !input ayudante_auto
+            state: 'on'
+          - condition: numeric_state
+            entity_id: !input sensorlux
+            below: !input iluminacion_minima
+        sequence:
+          - scene: !input escena_normal
+      - conditions:
+          - condition: state
+            entity_id: !input grupo_luces
+            state: 'on'
+          - condition: state
+            entity_id: !input ayudante_auto
+            state: 'on'
+          - condition: state
+            entity_id: !input 'sensorpir'
+            to: 'off'
+            for: !input tiempo_atenuacion
+        sequence:
+          - scene: !input escena_min
+      - conditions:
+          - condition: state
+            entity_id: !input grupo_luces
+            state: 'on'
+          - condition: state
+            entity_id: !input ayudante_auto
+            state: 'on'
+          - condition: state
+            entity_id: !input 'sensorpir'
+            to: 'off'
+            for: !input tiempo_apagado
+        sequence:
           - service: light.turn_off
-            entity_id: !input luces
-    
-  - conditions:
-    - '{{ comando == ''brightness_up_click'' }}'
-    sequence:
-    - service: scene.turn_on
-      entity_id: !input escena_max
-
-  - conditions:
-    - '{{ command == ''brightness_down_click'' }}'
-    sequence:
-    - service: scene.turn_on
-      entity_id: !input escena_min
-
-  - conditions:
-    - '{{ command == ''brightness_up_hold'' }}'
-    sequence:
-    - service: input_boolean.toggle
-      target:
-        entity_id: !input ayudante_automatizacion
-
-  - conditions:
-    - '{{ command == ''brightness_down_hold'' }}'
-    sequence: !input boton_abajo_hold
-
-  - conditions:
-    - '{{ command == ''arrow_left_click'' }}'
-    sequence: !input boton_derecha
-
-  - conditions:
-    - '{{ command == ''arrow_left_hold'' }}'
-    sequence: !input boton_derecha_hold
-
-  - conditions:
-    - '{{ command == ''arrow_right_click'' }}'
-    sequence: !input boton_izquierda
-
-  - conditions:
-    - '{{ command == ''arrow_right_hold'' }}'
-    sequence: !input boton_izquierda_hold
+            entity_id: !input grupo_luces
