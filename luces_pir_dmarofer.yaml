@@ -79,17 +79,17 @@ max_exceeded: silent
 
 trigger:
   - platform: state
-    entity_id: !input 'sensorpir'
-    to: 'on'
+    entity_id: !input sensorpir
+    to: "on"
 
   - platform: state
-    entity_id: !input 'sensorpir'
-    to: 'off'
+    entity_id: !input sensorpir
+    to: "off"
     for: !input tiempo_atenuacion
 
   - platform: state
-    entity_id: !input 'sensorpir'
-    to: 'off'
+    entity_id: !input sensorpir
+    to: "off"
     for: !input tiempo_apagado
 
 action:
