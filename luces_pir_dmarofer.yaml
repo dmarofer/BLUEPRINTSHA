@@ -77,6 +77,17 @@ blueprint:
 mode: restart
 max_exceeded: silent
 
+variables:
+  grupo_luces: !input grupo_luces
+  sensorpir: !input sensorpir
+  sensorlux: !input sensorlux
+  escena_normal: !input escena_normal
+  escena_min: !input escena_min
+  ayudante_auto: !input ayudante_auto
+  tiempo_atenuacion: !input tiempo_atenuacion
+  tiempo_apagado: !input tiempo_apagado
+  iluminacion_minima: !input iluminacion_minima
+
 trigger:
   - platform: state
     entity_id: !input sensorpir
@@ -92,9 +103,7 @@ trigger:
     to: "off"
     for: !input tiempo_apagado
 
-variables:
-  escena_normal: !input escena_normal
-  escena_min: !input escena_min
+
   
 action:
   - choose:
