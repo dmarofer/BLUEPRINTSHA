@@ -105,7 +105,9 @@ action:
             entity_id: !input sensorlux
             below: !input iluminacion_minima
         sequence:
-          - scene: !input escena_normal
+          - service: scene.turn_on
+            target:
+              entity_id: !input escena_normal
       - conditions:
           - condition: state
             entity_id: !input grupo_luces
@@ -118,7 +120,9 @@ action:
             to: 'off'
             for: !input tiempo_atenuacion
         sequence:
-          - scene: !input escena_min
+          - service: scene.turn_on
+            target:
+              entity_id: !input escena_min
       - conditions:
           - condition: state
             entity_id: !input grupo_luces
